@@ -1,34 +1,27 @@
 /*
- * @Description:
+ * @Description: 
  * @Autor: Huang Yingming
  * @LastEditors: Huang Yingming
- * @LastEditTime: 2021-08-22 20:13:42
+ * @LastEditTime: 2021-08-23 10:18:46
  */
-
 let File_Option = {}
-var fs = require('fs')
+const fs = require('fs')
+const date = require("silly-datetime");
 
-File_Option.read_file = () => {
-  let data = {};
+// Error log
+File_Option.save_file = (data, position = '0') => {
   try {
-    //读文件
-    let jsondata = fs.readFileSync('data.json');
-    //json数据流解析
-    data = JSON.parse(jsondata);
-    //输出
-    // console.log(data);
-    return data
-  } catch (err) {
-    console.log(err);
-    return false;
-  }
-}
-
-File_Option.save_file = (data) => {
-  try {
-    fs.writeFileSync('./data.json', JSON.stringify(data))
+    // the wrong time, position of error,  cause of error
+    fs.writeFileSync("./error/" + date.format(new Date(), 'YYYYMMDD') + '.log', JSON.stringify({
+      time: date.format(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+      position: position,
+      message: data
+    }) + '\n', { 'flag': 'a' }, err => {
+      return false;
+    })
     return true;
-  } catch (err) {
+  }
+  catch (err) {
     console.log(err);
     return false;
   }
