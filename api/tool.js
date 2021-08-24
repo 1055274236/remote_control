@@ -2,7 +2,7 @@
  * @Description: 
  * @Autor: Huang Yingming
  * @LastEditors: Huang Yingming
- * @LastEditTime: 2021-08-23 10:18:46
+ * @LastEditTime: 2021-08-24 20:40:27
  */
 let File_Option = {}
 const fs = require('fs')
@@ -19,6 +19,47 @@ File_Option.save_file = (data, position = '0') => {
     }) + '\n', { 'flag': 'a' }, err => {
       return false;
     })
+    return true;
+  }
+  catch (err) {
+    console.log(err);
+    return false;
+  }
+}
+
+/**
+ * @description: 读取指定路径相关 JSON 数据
+ * @param {String} filePath
+ * @return {JSON} data or {Boolean} false
+ * @author: Huang Yingming
+ */
+File_Option.readFile = (filePath) => {
+  let data = {};
+  try {
+    //读文件
+    let jsondata = fs.readFileSync(filePath);
+    //json数据流解析
+    data = JSON.parse(jsondata);
+    //输出
+    // console.log(data);
+    return data
+  }
+  catch (err) {
+    console.log(err);
+    return false;
+  }
+}
+
+/**
+ * @description: 将指定数据保存到指定文件中
+ * @param {String} filePath
+ * @param {JSON} data
+ * @return {Boolean} *
+ * @author: Huang Yingming
+ */
+File_Option.saveFile = (filePath, data) => {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data))
     return true;
   }
   catch (err) {

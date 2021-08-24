@@ -2,7 +2,7 @@
  * @Description:
  * @Autor: Huang Yingming
  * @LastEditors: Huang Yingming
- * @LastEditTime: 2021-08-23 15:32:32
+ * @LastEditTime: 2021-08-24 21:23:04
  */
 
 const koa = require('koa');
@@ -15,7 +15,7 @@ const io = require('socket.io')(server, { cors: true });
 const tool = require('./tool');
 
 // 对其他网站的导入
-// const router = require('./router')
+const router = require('./router')
 
 // 支持跨域
 app.use(require('koa2-cors')());
