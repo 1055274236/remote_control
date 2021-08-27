@@ -2,7 +2,7 @@
  * @Description:
  * @Autor: Huang Yingming
  * @LastEditors: Huang Yingming
- * @LastEditTime: 2021-08-24 21:58:42
+ * @LastEditTime: 2021-08-27 17:52:48
  */
 
 const router = require('koa-router')()
@@ -30,6 +30,7 @@ router.post('/login', ctx => {
     // 查询密码是否相同
     if (user[account].password == password) {
       message['status'] = 200
+      message['name'] = user[account].name
     }
   }
 
@@ -47,6 +48,7 @@ router.post('/signIn', ctx => {
   let body = ctx.request.body
   let account = body.account
   let password = body.password
+  let name = body.name
 
   let message = {}
   message['option'] = 'signIn'
@@ -57,8 +59,8 @@ router.post('/signIn', ctx => {
   // 查询用户名是否存在，如果存在并操作成功则返回 200
   if (user[account] === undefined) {
     user[account] = {}
-    console.log(user)
     user[account]['password'] = password
+    user[account]['name'] = name
     tool.saveFile('./data/user.json', user)
 
     message['status'] = 200
@@ -151,4 +153,7 @@ router.post('/deleteFavorite', ctx => {
   ctx.response.body = message
 })
 
+router.get('./checkLink', ctx => {
+  ctx.response.body = { status: 200 }
+})
 module.exports = router

@@ -2,7 +2,7 @@
  * @Description:
  * @Autor: Huang Yingming
  * @LastEditors: Huang Yingming
- * @LastEditTime: 2021-08-24 21:23:04
+ * @LastEditTime: 2021-08-27 17:44:32
  */
 
 const koa = require('koa');
@@ -53,14 +53,21 @@ io.on('connection', (socket) => {
    * @description: socket.io 断开连接,对缓存内的相应数据进行删除
    * @author: Huang Yingming
    */
-  io.on('disconnect', () => {
-    if (socket == room[socket.roomKey].tv) {
-      if (room[socket.roomKey].remoteControl !== undefined)
-        room[socket.roomKey].remoteControl.$emit('disconnect', '电视断开连接,请重新输入编号')
-      delete room[socket.roomKey]
+  socket.on('disconnect', () => {
+    try {
+      if (socket.roomKey !== undefined) {
+        if (socket == room[socket.roomKey].tv) {
+          if (room[socket.roomKey].remoteControl !== undefined)
+            room[socket.roomKey].remoteControl.emit('disconnect', '电视断开连接,请重新输入编号')
+          delete room[socket.roomKey]
+          return;
+        }
+        if (socket == room[socket.roomKey].remoteControl)
+          delete room[socket.roomKey].remoteControl
+      }
+    } catch (err) {
+      tool.save_file(err.toString(), 'disconnect')
     }
-    if (socket == room[socket.roomKey].remoteControl)
-      delete room[socket.roomKey].remoteControl
   })
 
   /**
@@ -68,22 +75,28 @@ io.on('connection', (socket) => {
    * @return {Object} message {option, status, key}
    * @author: Huang Yingming
    */
-  io.on('createRoom', () => {
-    let message = {}
-    message.option = 'createRoom'
+  console.log("asd")
+  socket.on('createRoom', () => {
     try {
-      let roomKey = randomRoomKey()
-      room[roomKey] = {}
-      room[roomKey].tv = socket
-      // room[roomKey].remoteControl = {}
-      socket.roomKey = roomKey
-      message.status = 200
-      message.key = roomKey
+      let message = {}
+      console.log('createRoom')
+      message.option = 'createRoom'
+      try {
+        let roomKey = randomRoomKey()
+        room[roomKey] = {}
+        room[roomKey].tv = socket
+        // room[roomKey].remoteControl = {}
+        socket.roomKey = roomKey
+        message.status = 200
+        message.key = roomKey
+      } catch (err) {
+        message.status = 503
+        tool.save_file(err.toString(), 'createRoom')
+      }
+      socket.emit('createRoom', message)
     } catch (err) {
-      message.status = 503
-      tool.save_file(err.toString(), 'createRoom')
+      tool.save_file(err.toString(), 'createroom')
     }
-    socket.$emit('createRoom', message)
   })
 
   /**
@@ -92,19 +105,23 @@ io.on('connection', (socket) => {
    * @return {Object} message {option, status}
    * @author: Huang Yingming
    */
-  io.on('connectRoom', (msg) => {
-    msg = JSON.parse(JSON.stringify(msg))
-    let message = {}
-    message.option = 'connectRoom'
+  socket.on('connectRoom', (msg) => {
     try {
-      room[msg.roomKey].remoteControl = socket
-      socket.roomKey = msg.roomKey
-      message.status = 200
+      msg = JSON.parse(JSON.stringify(msg))
+      let message = {}
+      message.option = 'connectRoom'
+      try {
+        room[msg.roomKey].remoteControl = socket
+        socket.roomKey = msg.roomKey
+        message.status = 200
+      } catch (err) {
+        message.status = 503
+        tool.save_file(err.toString(), 'connectRoom')
+      }
+      socket.emit('connectRoom', message)
     } catch (err) {
-      message.status = 503
       tool.save_file(err.toString(), 'connectRoom')
     }
-    socket.$emit('connectRoom', message)
   })
 
   /**
@@ -113,10 +130,10 @@ io.on('connection', (socket) => {
    * @return {Object} option
    * @author: Huang Yingming
    */
-  io.on("option", (msg) => {
+  socket.on("option", (msg) => {
     msg = JSON.parse(JSON.stringify(msg))
     try {
-      room[msg.roomKey].tv.$emit('option', msg)
+      room[msg.roomKey].tv.emit('option', msg)
     } catch (err) {
       tool.save_file(err.toString(), 'option')
     }
@@ -129,17 +146,21 @@ io.on('connection', (socket) => {
  * @author: Huang Yingming
  */
 router.get("/allTheRoom", ctx => {
-  let allTheRoom = []
-  for (let i in room)
-    allTheRoom.push({
-      room: i,
-      tv: room[i].tv === undefined,
-      remoteControl: room[i].remoteControl === undefined
-    })
+  try {
+    let allTheRoom = []
+    for (let i in room)
+      allTheRoom.push({
+        room: i,
+        tv: room[i].tv === undefined,
+        remoteControl: room[i].remoteControl === undefined
+      })
 
-  // Return result
-  ctx.response.body = {
-    AllTheRoom: allTheRoom
+    // Return result
+    ctx.response.body = {
+      AllTheRoom: allTheRoom
+    }
+  } catch (err) {
+    tool.save_file(err.toString(), 'allTheRoom')
   }
 })
 
